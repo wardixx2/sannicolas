@@ -1,0 +1,76 @@
+.finances-container {
+  padding: 0;
+}
+
+.finances-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.finances-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.finances-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin: 4px 0 0 0;
+}
+
+/* Summary Cards Grid */
+.finance-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.finance-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.finance-card .label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.finance-card .amount {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.finance-card.income .amount {
+  color: #059669; /* Green */
+}
+
+.finance-card.expense .amount {
+  color: #dc2626; /* Red */
+}
+
+.finance-card.balance .amount {
+  color: #2563eb; /* Blue */
+}
+
+/* Badges for Income/Expense */
+.badge.type-income {
+  background-color: #d1fae5;
+  color: #059669;
+}
+
+.badge.type-expense {
+  background-color: #fee2e2;
+  color: #dc2626;
+}

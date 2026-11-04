@@ -1,0 +1,100 @@
+.sidebar-container {
+  width: 260px;
+  background-color: #0f172a; /* Dark Navy Background */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 16px;
+  box-sizing: border-box;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Header Section */
+.sidebar-header {
+  padding-bottom: 20px;
+  border-bottom: 1px solid #1e293b;
+  margin-bottom: 20px;
+  padding-left: 8px;
+}
+
+.sidebar-title {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.sidebar-subtitle {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+/* Navigation Links */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  color: #cbd5e1; /* Mas maliwanag na kulay para malinaw basahin */
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+}
+
+.nav-item:hover {
+  background-color: #1e293b;
+  color: #ffffff;
+  transform: translateX(3px);
+}
+
+/* Active State Button */
+.nav-item.active {
+  background-color: #2563eb; /* Vibrant Blue */
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+}
+
+.nav-icon {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Bottom Footer Card */
+.sidebar-footer {
+  margin-top: 20px;
+}
+
+.slogan-card {
+  background-color: #1e293b;
+  padding: 14px;
+  border-radius: 12px;
+  text-align: center;
+  border: 1px solid #334155;
+}
+
+.slogan-text {
+  font-size: 11px;
+  color: #94a3b8;
+  font-style: italic;
+  margin: 0;
+  line-height: 1.4;
+}

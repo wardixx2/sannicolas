@@ -1,0 +1,62 @@
+.incidents-container {
+  padding: 0;
+}
+
+.incidents-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.incidents-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.incidents-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin: 4px 0 0 0;
+}
+
+/* Status Badges */
+.badge.active-case {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.badge.settled-case {
+  background-color: #d1fae5;
+  color: #059669;
+}
+
+.badge.escalated-case {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+/* Status update buttons */
+.btn-settle {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-escalate {
+  background-color: #f59e0b;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
