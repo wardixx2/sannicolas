@@ -71,6 +71,26 @@
   gap: 6px;
 }
 
+.btn-delete-mode {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+
+.btn-delete-mode:hover {
+  background-color: #fee2e2;
+  border-color: #f87171;
+}
+
 .btn-cancel-mode {
   background-color: #f1f5f9;
   border: 1px solid #cbd5e1;
@@ -101,6 +121,60 @@
 
 .btn-save-changes:hover {
   background-color: #15803d;
+}
+
+/* ========================================== */
+/* MODERN STYLISH SEARCH BAR STYLES           */
+/* ========================================== */
+.modern-search-wrapper {
+  position: relative;
+  width: 300px;
+  display: flex;
+  align-items: center;
+}
+
+.search-bar-icon {
+  position: absolute;
+  left: 14px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.modern-search-input {
+  width: 100%;
+  padding: 9px 36px 9px 38px;
+  border-radius: 9999px;
+  border: 1px solid #cbd5e1;
+  font-size: 13px;
+  background-color: #ffffff;
+  color: #0f172a;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.modern-search-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 50%;
+}
+
+.search-clear-btn:hover {
+  color: #334155;
+  background-color: #f1f5f9;
 }
 
 /* BADGES & PILLS */
@@ -223,39 +297,40 @@
 .attr-value.green { color: #16a34a; }
 .attr-value.red { color: #dc2626; }
 
-/* EDIT FORM STYLES */
+/* COMPACT EDIT & ADD FORM STYLES (4-COLUMN LAYOUT) */
 .edit-profile-form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .form-section-heading {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 800;
   color: #2563eb;
-  margin: 0 0 6px 0;
+  margin: 12px 0 4px 0;
   border-bottom: 1px dashed #cbd5e1;
-  padding-bottom: 6px;
+  padding-bottom: 4px;
 }
 
-.form-grid-3 {
+.form-grid-4 {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 14px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
 }
 
 .form-label {
   display: block;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: #334155;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
+  text-transform: uppercase;
 }
 
 .form-input {
   width: 100%;
-  padding: 8px 10px;
+  padding: 6px 10px;
   border-radius: 6px;
   border: 1px solid #cbd5e1;
   font-size: 12px;
@@ -266,4 +341,17 @@
 .form-input:focus {
   outline: none;
   border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+@media screen and (max-width: 1024px) {
+  .form-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .form-grid-4 {
+    grid-template-columns: 1fr;
+  }
 }

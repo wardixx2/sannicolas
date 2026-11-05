@@ -102,7 +102,7 @@ export default function DocumentServices() {
   return (
     <div className="admin-dashboard-wrapper">
       
-      {/* CSS para sakupin ang buong pahina ng bond paper at alisin ang browser margins */}
+      {/* CSS to span bond paper and remove browser margins during print */}
       <style>{`
         @page {
           size: auto;
@@ -138,7 +138,7 @@ export default function DocumentServices() {
           <div className="dashboard-top-flex">
             <div>
               <h1 className="dash-title">Document Services & Issuance</h1>
-              <p className="dash-subtitle">Pamamahala at pag-apruba ng mga online document requests ng mga residente.</p>
+              <p className="dash-subtitle">Management and approval of online document requests from residents.</p>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={fetchDocumentRequests} className="btn-refresh-clean">
@@ -180,19 +180,19 @@ export default function DocumentServices() {
             <div className="panel-divider-line"></div>
 
             {loading ? (
-              <div className="table-state-box">Naglo-load ng mga request...</div>
+              <div className="table-state-box">Loading document requests...</div>
             ) : filteredRequests.length === 0 ? (
-              <div className="table-state-box">Walang nakitang document request sa kategoryang ito.</div>
+              <div className="table-state-box">No document requests found in this category.</div>
             ) : (
               <table className="pro-admin-table">
                 <thead>
                   <tr>
-                    <th>Residente & Contact</th>
-                    <th>Uri ng Dokumento</th>
-                    <th>Layunin (Purpose)</th>
-                    <th>Petsa ng Request</th>
+                    <th>Resident & Contact</th>
+                    <th>Document Type</th>
+                    <th>Purpose</th>
+                    <th>Request Date</th>
                     <th>Status</th>
-                    <th>Mga Aksyon</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -267,43 +267,65 @@ export default function DocumentServices() {
           <div style={{ display: 'flex', gap: '20px', marginTop: '16px', alignItems: 'flex-start' }}>
             
             {/* LEFT SIDE: EDITABLE FIELDS PANEL */}
-            <div style={{ width: '360px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+            <div style={{ width: '380px', backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', boxSizing: 'border-box' }}>
               <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', color: '#2563eb', fontWeight: '800' }}>Edit Certificate Details</h4>
               
               <div>
-                <label style={{ fontSize: '11px', fontWeight: '700', color: '#334155' }}>Resident Full Name</label>
+                <label style={{ fontSize: '11px', fontWeight: '700', color: '#334155', display: 'block', marginBottom: '2px' }}>Resident Full Name</label>
                 <input type="text" name="resident_name" value={printData.resident_name} onChange={handlePrintChange} style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '12px', boxSizing: 'border-box' }} />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '700', color: '#334155' }}>Age</label>
+                  <label style={{ fontSize: '11px', fontWeight: '700', color: '#334155', display: 'block', marginBottom: '2px' }}>Age</label>
                   <input type="text" name="age" value={printData.age} onChange={handlePrintChange} style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '12px', boxSizing: 'border-box' }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: '11px', fontWeight: '700', color: '#334155' }}>Purok / Address</label>
+                  <label style={{ fontSize: '11px', fontWeight: '700', color: '#334155', display: 'block', marginBottom: '2px' }}>Purok / Address</label>
                   <input type="text" name="purok" value={printData.purok} onChange={handlePrintChange} style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '12px', boxSizing: 'border-box' }} />
                 </div>
               </div>
 
               <div>
-                <label style={{ fontSize: '11px', fontWeight: '700', color: '#334155' }}>Document Type</label>
+                <label style={{ fontSize: '11px', fontWeight: '700', color: '#334155', display: 'block', marginBottom: '2px' }}>Document Type</label>
                 <input type="text" name="document_type" value={printData.document_type} onChange={handlePrintChange} style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '12px', boxSizing: 'border-box' }} />
               </div>
 
               <div>
-                <label style={{ fontSize: '11px', fontWeight: '700', color: '#334155' }}>Purpose</label>
+                <label style={{ fontSize: '11px', fontWeight: '700', color: '#334155', display: 'block', marginBottom: '2px' }}>Purpose</label>
                 <input type="text" name="purpose" value={printData.purpose} onChange={handlePrintChange} style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '12px', boxSizing: 'border-box' }} />
               </div>
 
-              <h5 style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#0f172a', fontWeight: '800' }}>Date Issued</h5>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
-                <input type="text" name="date_issued_day" value={printData.date_issued_day} onChange={handlePrintChange} placeholder="Day" style={{ padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '11px', boxSizing: 'border-box' }} />
-                <input type="text" name="date_issued_month" value={printData.date_issued_month} onChange={handlePrintChange} placeholder="Month" style={{ padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '11px', boxSizing: 'border-box' }} />
-                <input type="text" name="date_issued_year" value={printData.date_issued_year} onChange={handlePrintChange} placeholder="Year" style={{ padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '11px', boxSizing: 'border-box' }} />
+              <h5 style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#0f172a', fontWeight: '800' }}>Date Issued</h5>
+              
+              <div style={{ display: 'flex', gap: '6px', width: '100%', boxSizing: 'border-box' }}>
+                <input 
+                  type="text" 
+                  name="date_issued_day" 
+                  value={printData.date_issued_day} 
+                  onChange={handlePrintChange} 
+                  placeholder="Day" 
+                  style={{ flex: '1', minWidth: '0', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '11px', boxSizing: 'border-box' }} 
+                />
+                <input 
+                  type="text" 
+                  name="date_issued_month" 
+                  value={printData.date_issued_month} 
+                  onChange={handlePrintChange} 
+                  placeholder="Month" 
+                  style={{ flex: '1.5', minWidth: '0', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '11px', boxSizing: 'border-box' }} 
+                />
+                <input 
+                  type="text" 
+                  name="date_issued_year" 
+                  value={printData.date_issued_year} 
+                  onChange={handlePrintChange} 
+                  placeholder="Year" 
+                  style={{ flex: '1', minWidth: '0', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '11px', boxSizing: 'border-box' }} 
+                />
               </div>
 
-              <h5 style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#0f172a', fontWeight: '800' }}>Barangay Officials</h5>
+              <h5 style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#0f172a', fontWeight: '800' }}>Barangay Officials</h5>
               <div>
                 <label style={{ fontSize: '10px', fontWeight: '700', color: '#64748b' }}>Punong Barangay</label>
                 <input type="text" name="punong_barangay" value={printData.punong_barangay} onChange={handlePrintChange} style={{ width: '100%', padding: '5px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '11px', boxSizing: 'border-box' }} />
@@ -351,7 +373,7 @@ export default function DocumentServices() {
                   {/* Main Content Layout with Sidebar */}
                   <div style={{ display: 'flex', marginTop: '35px', gap: '30px' }}>
                     
-                    {/* LEFT SIDEBAR: OFFICIALS (PINALAKI ANG WIDTH AT FONT SIZE) */}
+                    {/* LEFT SIDEBAR: OFFICIALS */}
                     <div style={{
                       width: '230px', backgroundColor: '#eef2ed', border: '1px solid #cbd5e1',
                       padding: '16px 10px', fontSize: '12px', textAlign: 'center', boxSizing: 'border-box', height: 'fit-content'
@@ -398,7 +420,7 @@ export default function DocumentServices() {
                       <p style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '20px' }}>TO WHOM IT MAY CONCERN:</p>
 
                       <p style={{ fontSize: '14px', textAlign: 'justify', lineHeight: '2', textIndent: '50px', marginBottom: '18px' }}>
-                        This is to certify that <strong>{printData.resident_name ? printData.resident_name.toUpperCase() : '[PANGALAN NG RESIDENTE]'}</strong>, {printData.age} years old, Filipino, and a bona-fide resident of {printData.purok}, Barangay San Nicolas, Municipality of Castillejos, Zambales.
+                        This is to certify that <strong>{printData.resident_name ? printData.resident_name.toUpperCase() : '[RESIDENT NAME]'}</strong>, {printData.age} years old, Filipino, and a bona-fide resident of {printData.purok}, Barangay San Nicolas, Municipality of Castillejos, Zambales.
                       </p>
 
                       <p style={{ fontSize: '14px', textAlign: 'justify', lineHeight: '2', textIndent: '50px', marginBottom: '18px' }}>
@@ -406,7 +428,7 @@ export default function DocumentServices() {
                       </p>
 
                       <p style={{ fontSize: '14px', textAlign: 'justify', lineHeight: '2', textIndent: '50px', marginBottom: '25px' }}>
-                        This certification is issued upon the request of the above-mention individual for <strong>{printData.purpose}</strong> purposes.
+                        This certification is issued upon the request of the above-mentioned individual for <strong>{printData.purpose}</strong> purposes.
                       </p>
 
                       <p style={{ fontSize: '14px', textIndent: '50px', lineHeight: '2' }}>

@@ -1,16 +1,16 @@
 /* Printable Area Styling */
 .certificate-print-container {
-  display: none; /* Nakatago sa regular screen view */
+  display: none; /* Hidden in regular screen view */
 }
 
-/* Media Query para sa Actual Printing */
+/* Media Query for Actual Printing */
 @media print {
-  /* Itago ang lahat ng Elemento ng Dashboard at Sidebar */
+  /* Hide all dashboard elements and sidebar */
   body * {
     visibility: hidden;
   }
 
-  /* Ipakita Laman Lamang ang Printable Document Area */
+  /* Show only the printable document area */
   .certificate-print-container,
   .certificate-print-container * {
     visibility: visible;

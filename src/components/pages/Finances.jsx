@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabaseClient'
+import { Search, Plus, X, DollarSign, ArrowUpRight, ArrowDownRight, Wallet } from 'lucide-react'
 import './Finances.css'
 
 export default function Finances() {
@@ -101,15 +102,15 @@ export default function Finances() {
   )
 
   return (
-    <div className="finances-container">
+    <div className="admin-dashboard-wrapper">
       {/* Page Header */}
-      <div className="finances-header">
+      <div className="dashboard-top-flex">
         <div>
-          <h1 className="finances-title">Budget & Expenses Tracker</h1>
-          <p className="finances-subtitle">Monitor barangay budget allocations, revenues, and operational expenses.</p>
+          <h1 className="dash-title">Budget & Expenses Tracker</h1>
+          <p className="dash-subtitle">Monitor barangay budget allocations, revenues, and operational expenses.</p>
         </div>
-        <button onClick={() => setShowModal(true)} className="add-btn">
-          + Record Transaction
+        <button onClick={() => setShowModal(true)} className="btn-add-resident">
+          <Plus size={16} /> Record Transaction
         </button>
       </div>
 
@@ -131,69 +132,91 @@ export default function Finances() {
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="action-bar">
-        <input
-          type="text"
-          placeholder="Search by Title, Category, or Type (Income/Expense)..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="search-input"
-        />
-      </div>
+      <div className="admin-panel-card">
+        {/* Action Bar with Modern Search Bar */}
+        <div className="panel-top-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Wallet size={18} color="#2563eb" />
+            <h3 className="panel-heading-title" style={{ margin: 0 }}>Financial Records ({filteredTransactions.length})</h3>
+          </div>
 
-      {/* Transactions Data Table */}
-      <div className="table-wrapper">
-        <table className="residents-table">
-          <thead>
-            <tr>
-              <th>Title / Particulars</th>
-              <th>Category</th>
-              <th>Type</th>
-              <th>Amount</th>
-              <th>Date</th>
-              <th>Description / Remarks</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '24px' }}>Loading financial logs...</td>
-              </tr>
-            ) : filteredTransactions.length === 0 ? (
-              <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '24px' }}>No financial transactions recorded.</td>
-              </tr>
-            ) : (
-              filteredTransactions.map((item) => (
-                <tr key={item.id}>
-                  <td><strong>{item.title}</strong></td>
-                  <td>{item.category}</td>
-                  <td>
-                    <span className={`badge ${item.type === 'Income' ? 'type-income' : 'type-expense'}`}>
-                      {item.type}
-                    </span>
-                  </td>
-                  <td style={{ fontWeight: 'bold', color: item.type === 'Income' ? '#059669' : '#dc2626' }}>
-                    {item.type === 'Income' ? '+' : '-'}₱{parseFloat(item.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                  </td>
-                  <td>{item.transaction_date}</td>
-                  <td>{item.description || 'N/A'}</td>
-                </tr>
-              ))
+          <div className="modern-search-wrapper">
+            <Search size={16} className="search-bar-icon" />
+            <input
+              type="text"
+              placeholder="Search by title, category, or type..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="modern-search-input"
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')} className="search-clear-btn">
+                <X size={14} />
+              </button>
             )}
-          </tbody>
-        </table>
+          </div>
+        </div>
+
+        <div className="panel-divider-line"></div>
+
+        {/* Transactions Data Table */}
+        <div className="table-responsive-container">
+          <table className="pro-admin-table">
+            <thead>
+              <tr>
+                <th>Title / Particulars</th>
+                <th>Category</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Description / Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="table-state-box">Loading financial logs...</td>
+                </tr>
+              ) : filteredTransactions.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="table-state-box">No financial transactions recorded.</td>
+                </tr>
+              ) : (
+                filteredTransactions.map((item) => (
+                  <tr key={item.id}>
+                    <td><strong>{item.title}</strong></td>
+                    <td>{item.category}</td>
+                    <td>
+                      <span className={`status-pill ${item.type === 'Income' ? 'type-income' : 'type-expense'}`}>
+                        {item.type}
+                      </span>
+                    </td>
+                    <td style={{ fontWeight: 'bold', color: item.type === 'Income' ? '#059669' : '#dc2626' }}>
+                      {item.type === 'Income' ? '+' : '-'}₱{parseFloat(item.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td>{item.transaction_date}</td>
+                    <td>{item.description || 'N/A'}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Modal Entry Form */}
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-content">
-            <h2 className="modal-title">Record Financial Transaction</h2>
+          <div className="modal-content" style={{ maxWidth: '600px', width: '100%', background: '#fff', padding: '24px', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#0f172a' }}>Record Financial Transaction</h2>
+              <button onClick={() => setShowModal(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                <X size={18} />
+              </button>
+            </div>
 
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="input-group">
                 <label className="form-label">Transaction Title / Particulars</label>
                 <input
                   type="text"
@@ -206,27 +229,27 @@ export default function Finances() {
                 />
               </div>
 
-              <div className="form-row">
-                <div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="input-group">
                   <label className="form-label">Transaction Type</label>
                   <select
                     name="type"
                     value={formData.type}
                     onChange={handleChange}
-                    className="form-select"
+                    className="form-input"
                   >
-                    <option value="Expense">Expense (Gastos)</option>
-                    <option value="Income">Income / Budget (Pondo)</option>
+                    <option value="Expense">Expense</option>
+                    <option value="Income">Income / Budget</option>
                   </select>
                 </div>
 
-                <div>
+                <div className="input-group">
                   <label className="form-label">Category</label>
                   <select
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    className="form-select"
+                    className="form-input"
                   >
                     <option value="Administrative">Administrative & Office</option>
                     <option value="Infrastructure">Infrastructure & Public Works</option>
@@ -238,8 +261,8 @@ export default function Finances() {
                 </div>
               </div>
 
-              <div className="form-row">
-                <div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="input-group">
                   <label className="form-label">Amount (₱)</label>
                   <input
                     type="number"
@@ -253,7 +276,7 @@ export default function Finances() {
                   />
                 </div>
 
-                <div>
+                <div className="input-group">
                   <label className="form-label">Transaction Date</label>
                   <input
                     type="date"
@@ -266,7 +289,7 @@ export default function Finances() {
                 </div>
               </div>
 
-              <div className="form-group">
+              <div className="input-group">
                 <label className="form-label">Description / OR Number / Remarks</label>
                 <textarea
                   name="description"
@@ -275,21 +298,22 @@ export default function Finances() {
                   rows="3"
                   className="form-input"
                   placeholder="Add Official Receipt (OR) number or details..."
+                  style={{ resize: 'vertical' }}
                 />
               </div>
 
-              <div className="modal-actions">
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px' }}>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="cancel-btn"
+                  className="btn-cancel-mode"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="save-btn"
+                  className="btn-save-changes"
                 >
                   {loading ? 'Saving...' : 'Save Record'}
                 </button>

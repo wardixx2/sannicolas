@@ -2,53 +2,34 @@
   padding: 0;
 }
 
-.finances-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.finances-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0;
-}
-
-.finances-subtitle {
-  font-size: 13px;
-  color: #64748b;
-  margin: 4px 0 0 0;
-}
-
 /* Summary Cards Grid */
 .finance-summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .finance-card {
   background: white;
   padding: 20px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
 
 .finance-card .label {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   color: #64748b;
   text-transform: uppercase;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
 }
 
 .finance-card .amount {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 800;
   color: #0f172a;
 }
 
@@ -65,12 +46,14 @@
 }
 
 /* Badges for Income/Expense */
-.badge.type-income {
-  background-color: #d1fae5;
-  color: #059669;
+.status-pill.type-income {
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
 }
 
-.badge.type-expense {
-  background-color: #fee2e2;
+.status-pill.type-expense {
+  background-color: #fef2f2;
   color: #dc2626;
+  border: 1px solid #fecaca;
 }

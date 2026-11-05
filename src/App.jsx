@@ -3,7 +3,7 @@ import { supabase } from "./supabaseClient"
 
 // Views & Pages
 import LandingPage from './components/pages/LandingPage'
-import ResidentPortal from './components/public/ResidentPortal'
+import ResidentPortal from './components/public/ResidentPortal';
 
 // Admin Components
 import Sidebar from './components/Sidebar'
@@ -17,63 +17,149 @@ import Incidents from './components/pages/Incidents'
 import Finances from './components/pages/Finances'
 import Reports from './components/pages/Reports'
 
+import './App.css'
+
 function App() {
   const [session, setSession] = useState(null)
+  const [userRole, setUserRole] = useState(null) // 'admin' o 'resident'
   const [activeTab, setActiveTab] = useState('Dashboard')
+  const [checkingRole, setCheckingRole] = useState(true)
   
-  // Navigation View State: 'landing', 'login', 'admin', or 'public-request'
+  // Navigation View State: 'landing', 'login', 'admin', 'portal'
   const [currentView, setCurrentView] = useState('landing')
 
-  // Login Form States for Admin
+  // Login Form States
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
 
+  // Listahan ng kilalang Admin Emails (Fallback validation)
+  const ADMIN_EMAILS = [
+    'admin@sannicolas.gov.ph',
+    'edwardraquipo26@gmail.com' // I-update ayon sa iyong admin email
+  ]
+
   useEffect(() => {
+    // Kunin ang kasalukuyang session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
+      if (session?.user?.email) {
+        verifyUserRole(session.user.email)
+      } else {
+        setCheckingRole(false)
+      }
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session)
+      if (session?.user?.email) {
+        await verifyUserRole(session.user.email)
+      } else {
+        setUserRole(null)
+        setCheckingRole(false)
+      }
     })
 
     return () => subscription.unsubscribe()
   }, [])
 
-  // Route para sa Resident E-Governance Portal
-  if (window.location.pathname === '/request' || currentView === 'public-request') {
-    return <ResidentPortal onBack={() => setCurrentView('landing')} />
+  // Suriin ang Role ng User mula sa Supabase at Email
+  const verifyUserRole = async (userEmail) => {
+    setCheckingRole(true)
+    
+    // Check sa residents database table
+    const { data, error } = await supabase
+      .from('residents')
+      .select('role')
+      .eq('email', userEmail)
+      .maybeSingle()
+
+    let detectedRole = 'resident'
+
+    if (data && data.role === 'admin') {
+      detectedRole = 'admin'
+    } else if (ADMIN_EMAILS.includes(userEmail.toLowerCase())) {
+      detectedRole = 'admin'
+    }
+
+    setUserRole(detectedRole)
+    setCheckingRole(false)
   }
 
-  // Handle Admin User Authentication
+  // Handle User Authentication Login
   const handleLogin = async (e) => {
     e.preventDefault()
     setLoading(true)
     setErrorMsg('')
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
 
     if (error) {
       setErrorMsg(error.message)
-    } else {
-      setCurrentView('admin')
+      setLoading(false)
+    } else if (data?.user) {
+      await verifyUserRole(data.user.email)
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   // Handle User Logout
   const handleLogout = async () => {
     await supabase.auth.signOut()
+    setSession(null)
+    setUserRole(null)
     setCurrentView('landing')
   }
 
-  // 1. Render Landing Page kung wala pang session at nasa landing view
-  if (currentView === 'landing' && !session) {
+  if (checkingRole) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc', color: '#64748b', fontWeight: '700', fontSize: '14px' }}>
+        Checking user authorization...
+      </div>
+    )
+  }
+
+  // ROUTE 1: Kung may nakalogin na Session
+  if (session) {
+    // KUNG REGULAR RESIDENT: Direkta sa Resident Portal
+    if (userRole !== 'admin') {
+      return <ResidentPortal currentUserEmail={session.user.email} onSignOut={handleLogout} />
+    }
+
+    // KUNG ADMIN: Papayagan sa Admin Dashboard Layout
+    return (
+      <div className="admin-app-layout">
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+
+        <div className="admin-main-container">
+          <Header user={session?.user} onLogout={handleLogout} />
+
+          <main className="admin-content-area">
+            {activeTab.toLowerCase().includes('dashboard') && <Dashboard />}
+            {(activeTab.toLowerCase().includes('resident') || activeTab.toLowerCase().includes('residents')) && <Residents />}
+            {(activeTab.toLowerCase().includes('document') || activeTab.toLowerCase().includes('services')) && (
+              <DocumentServices onBack={() => setActiveTab('Dashboard')} />
+            )}
+            {(activeTab.toLowerCase().includes('blotter') || activeTab.toLowerCase().includes('incident')) && <Incidents />}
+            {(activeTab.toLowerCase().includes('budget') || activeTab.toLowerCase().includes('finance')) && <Finances />}
+            {(activeTab.toLowerCase().includes('report') || activeTab.toLowerCase().includes('reports')) && <Reports />}
+          </main>
+        </div>
+      </div>
+    )
+  }
+
+  // ROUTE 2: Direct URL o Public Portal Request
+  if (window.location.pathname === '/request' || currentView === 'public-request') {
+    return <ResidentPortal onBack={() => setCurrentView('landing')} />
+  }
+
+  // ROUTE 3: Landing Page kapag hindi nakalogin
+  if (currentView === 'landing') {
     return (
       <LandingPage 
         onNavigateLogin={() => setCurrentView('login')} 
@@ -82,91 +168,57 @@ function App() {
     )
   }
 
-  // 2. Render Admin Login Form
-  if (currentView === 'login' && !session) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc', fontFamily: 'system-ui' }}>
-        <div style={{ backgroundColor: '#ffffff', padding: '32px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)', width: '100%', maxWidth: '400px', border: '1px solid #e2e8f0' }}>
-          <button 
-            onClick={() => setCurrentView('landing')} 
-            style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '13px', marginBottom: '16px', fontWeight: '600', padding: 0 }}
-          >
-            ← Back to Home
-          </button>
-          
-          <h2 style={{ textAlign: 'center', margin: '0 0 4px 0', color: '#0f172a', fontSize: '20px', fontWeight: '800' }}>Barangay San Nicolas</h2>
-          <p style={{ textAlign: 'center', margin: '0 0 24px 0', color: '#64748b', fontSize: '13px' }}>
-            Admin Portal Login
-          </p>
-
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', fontWeight: '700', color: '#334155' }}>EMAIL ADDRESS</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', boxSizing: 'border-box', fontSize: '13px' }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', marginBottom: '6px', fontSize: '11px', fontWeight: '700', color: '#334155' }}>PASSWORD</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', boxSizing: 'border-box', fontSize: '13px' }}
-              />
-            </div>
-
-            {errorMsg && (
-              <p style={{ color: '#dc2626', fontSize: '12px', margin: 0, backgroundColor: '#fef2f2', padding: '8px', borderRadius: '6px' }}>{errorMsg}</p>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                backgroundColor: '#2563eb',
-                color: '#ffffff',
-                padding: '10px',
-                borderRadius: '8px',
-                border: 'none',
-                fontWeight: '700',
-                cursor: 'pointer',
-                marginTop: '6px',
-                fontSize: '13px'
-              }}
-            >
-              {loading ? 'Logging in...' : 'Log In'}
-            </button>
-          </form>
-        </div>
-      </div>
-    )
-  }
-
-  // 3. Render Admin Portal Dashboard pagka-login ng Admin
+  // ROUTE 4: Login Form (Unified Login)
   return (
-    <div style={{ display: 'flex', height: '100vh', backgroundColor: '#f8fafc', overflow: 'hidden' }}>
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div className="login-wrapper">
+      <div className="login-card-box">
+        <button 
+          onClick={() => setCurrentView('landing')} 
+          className="btn-back-link"
+        >
+          ← Back to Home
+        </button>
+        
+        <h2 className="login-title">Barangay San Nicolas</h2>
+        <p className="login-subtitle">
+          Portal Login System
+        </p>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <Header user={session?.user} onLogout={handleLogout} />
+        <form onSubmit={handleLogin} className="login-form">
+          <div>
+            <label className="login-label">EMAIL ADDRESS</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="login-input"
+            />
+          </div>
 
-        <main style={{ padding: '20px', flex: 1, boxSizing: 'border-box', overflowY: 'auto' }}>
-          {activeTab.toLowerCase().includes('dashboard') && <Dashboard />}
-          {(activeTab.toLowerCase().includes('resident') || activeTab.toLowerCase().includes('residents')) && <Residents />}
-          {(activeTab.toLowerCase().includes('document') || activeTab.toLowerCase().includes('services')) && (
-            <DocumentServices onBack={() => setActiveTab('Dashboard')} />
+          <div>
+            <label className="login-label">PASSWORD</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="login-input"
+            />
+          </div>
+
+          {errorMsg && (
+            <p className="login-error-msg">{errorMsg}</p>
           )}
-          {(activeTab.toLowerCase().includes('blotter') || activeTab.toLowerCase().includes('incident')) && <Incidents />}
-          {(activeTab.toLowerCase().includes('budget') || activeTab.toLowerCase().includes('finance')) && <Finances />}
-          {(activeTab.toLowerCase().includes('report') || activeTab.toLowerCase().includes('reports')) && <Reports />}
-        </main>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="login-submit-btn"
+          >
+            {loading ? 'Authenticating...' : 'Log In'}
+          </button>
+        </form>
       </div>
     </div>
   )

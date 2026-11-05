@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabaseClient'
+import { Search, Plus, X, ShieldAlert, CheckCircle, AlertTriangle } from 'lucide-react'
 import './Incidents.css'
 
 export default function Incidents() {
@@ -89,94 +90,116 @@ export default function Incidents() {
   )
 
   return (
-    <div className="incidents-container">
+    <div className="admin-dashboard-wrapper">
       {/* Page Header */}
-      <div className="incidents-header">
+      <div className="dashboard-top-flex">
         <div>
-          <h1 className="incidents-title">Blotter & Incident Management</h1>
-          <p className="incidents-subtitle">Record and track barangay complaints, blotter reports, and dispute resolutions.</p>
+          <h1 className="dash-title">Blotter & Incident Management</h1>
+          <p className="dash-subtitle">Record and track barangay complaints, blotter reports, and dispute resolutions.</p>
         </div>
-        <button onClick={() => setShowModal(true)} className="add-btn">
-          + File New Incident Report
+        <button onClick={() => setShowModal(true)} className="btn-add-resident">
+          <Plus size={16} /> File New Incident Report
         </button>
       </div>
 
-      {/* Action Bar */}
-      <div className="action-bar">
-        <input
-          type="text"
-          placeholder="Search by Case No., Complainant, Respondent, or Type..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="search-input"
-        />
-      </div>
+      <div className="admin-panel-card">
+        {/* Action Bar with Modern Search Bar */}
+        <div className="panel-top-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ShieldAlert size={18} color="#2563eb" />
+            <h3 className="panel-heading-title" style={{ margin: 0 }}>Blotter Records ({filteredIncidents.length})</h3>
+          </div>
 
-      {/* Data Table */}
-      <div className="table-wrapper">
-        <table className="residents-table">
-          <thead>
-            <tr>
-              <th>Case No.</th>
-              <th>Complainant</th>
-              <th>Respondent</th>
-              <th>Incident Type</th>
-              <th>Date</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="7" style={{ textAlign: 'center', padding: '24px' }}>Loading incident reports...</td>
-              </tr>
-            ) : filteredIncidents.length === 0 ? (
-              <tr>
-                <td colSpan="7" style={{ textAlign: 'center', padding: '24px' }}>No blotter records found.</td>
-              </tr>
-            ) : (
-              filteredIncidents.map((item) => (
-                <tr key={item.id}>
-                  <td><strong>{item.case_number}</strong></td>
-                  <td>{item.complainant_name}</td>
-                  <td>{item.respondent_name}</td>
-                  <td>{item.incident_type}</td>
-                  <td>{item.incident_date}</td>
-                  <td>
-                    <span className={`badge ${item.status === 'Active' ? 'active-case' : item.status === 'Settled' ? 'settled-case' : 'escalated-case'}`}>
-                      {item.status}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="action-btn-group">
-                      {item.status === 'Active' && (
-                        <>
-                          <button onClick={() => handleStatusUpdate(item.id, 'Settled')} className="btn-settle">
-                            Mark Settled
-                          </button>
-                          <button onClick={() => handleStatusUpdate(item.id, 'Escalated')} className="btn-escalate">
-                            Escalate
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))
+          <div className="modern-search-wrapper">
+            <Search size={16} className="search-bar-icon" />
+            <input
+              type="text"
+              placeholder="Search case no, names, or type..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="modern-search-input"
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')} className="search-clear-btn">
+                <X size={14} />
+              </button>
             )}
-          </tbody>
-        </table>
+          </div>
+        </div>
+
+        <div className="panel-divider-line"></div>
+
+        {/* Data Table */}
+        <div className="table-responsive-container">
+          <table className="pro-admin-table">
+            <thead>
+              <tr>
+                <th>Case No.</th>
+                <th>Complainant</th>
+                <th>Respondent</th>
+                <th>Incident Type</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="table-state-box">Loading incident reports...</td>
+                </tr>
+              ) : filteredIncidents.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="table-state-box">No blotter records found.</td>
+                </tr>
+              ) : (
+                filteredIncidents.map((item) => (
+                  <tr key={item.id}>
+                    <td><strong>{item.case_number}</strong></td>
+                    <td>{item.complainant_name}</td>
+                    <td>{item.respondent_name}</td>
+                    <td>{item.incident_type}</td>
+                    <td>{item.incident_date}</td>
+                    <td>
+                      <span className={`status-pill ${item.status === 'Active' ? 'active-case' : item.status === 'Settled' ? 'settled-case' : 'escalated-case'}`}>
+                        {item.status || 'Active'}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        {(!item.status || item.status === 'Active') && (
+                          <>
+                            <button onClick={() => handleStatusUpdate(item.id, 'Settled')} className="btn-settle">
+                              Mark Settled
+                            </button>
+                            <button onClick={() => handleStatusUpdate(item.id, 'Escalated')} className="btn-escalate">
+                              Escalate
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Modal Form */}
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-content">
-            <h2 className="modal-title">New Blotter / Incident Entry</h2>
+          <div className="modal-content" style={{ maxWidth: '600px', width: '100%', background: '#fff', padding: '24px', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#0f172a' }}>New Blotter / Incident Entry</h2>
+              <button onClick={() => setShowModal(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                <X size={18} />
+              </button>
+            </div>
 
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="input-group">
                 <label className="form-label">Case Reference Number</label>
                 <input
                   type="text"
@@ -188,40 +211,42 @@ export default function Incidents() {
                 />
               </div>
 
-              <div className="form-row">
-                <div>
-                  <label className="form-label">Complainant Name (Nagrereklamo)</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="input-group">
+                  <label className="form-label">Complainant Name</label>
                   <input
                     type="text"
                     name="complainant_name"
                     value={formData.complainant_name}
                     onChange={handleChange}
                     required
+                    placeholder="Complainant full name"
                     className="form-input"
                   />
                 </div>
 
-                <div>
-                  <label className="form-label">Respondent Name (Inirereklamo)</label>
+                <div className="input-group">
+                  <label className="form-label">Respondent Name</label>
                   <input
                     type="text"
                     name="respondent_name"
                     value={formData.respondent_name}
                     onChange={handleChange}
                     required
+                    placeholder="Respondent full name"
                     className="form-input"
                   />
                 </div>
               </div>
 
-              <div className="form-row">
-                <div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="input-group">
                   <label className="form-label">Incident Type</label>
                   <select
                     name="incident_type"
                     value={formData.incident_type}
                     onChange={handleChange}
-                    className="form-select"
+                    className="form-input"
                   >
                     <option value="Noise Disturbance">Noise Disturbance</option>
                     <option value="Physical Dispute / Altercation">Physical Dispute / Altercation</option>
@@ -231,7 +256,7 @@ export default function Incidents() {
                   </select>
                 </div>
 
-                <div>
+                <div className="input-group">
                   <label className="form-label">Purok Location</label>
                   <input
                     type="text"
@@ -244,7 +269,7 @@ export default function Incidents() {
                 </div>
               </div>
 
-              <div className="form-group">
+              <div className="input-group">
                 <label className="form-label">Incident Date</label>
                 <input
                   type="date"
@@ -255,7 +280,7 @@ export default function Incidents() {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="input-group">
                 <label className="form-label">Details / Narrative Description</label>
                 <textarea
                   name="details"
@@ -264,21 +289,22 @@ export default function Incidents() {
                   rows="3"
                   className="form-input"
                   placeholder="Provide brief statement or details of the complaint..."
+                  style={{ resize: 'vertical' }}
                 />
               </div>
 
-              <div className="modal-actions">
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px' }}>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="cancel-btn"
+                  className="btn-cancel-mode"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="save-btn"
+                  className="btn-save-changes"
                 >
                   {loading ? 'Saving...' : 'Save Incident Report'}
                 </button>

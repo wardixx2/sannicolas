@@ -17,7 +17,10 @@ import {
   Save, 
   X, 
   Heart, 
-  Accessibility 
+  Accessibility,
+  ShieldCheck,
+  Layers,
+  Trash2
 } from 'lucide-react'
 import './Residents.css'
 
@@ -25,10 +28,12 @@ export default function Residents() {
   const [residentsList, setResidentsList] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [filterLeaderOnly, setFilterLeaderOnly] = useState(false)
 
-  // View States: 'list' | 'view_profile' | 'add_resident'
+  // View States: 'list' | 'view_profile' | 'add_resident' | 'household_members'
   const [currentView, setCurrentView] = useState('list')
   const [selectedResident, setSelectedResident] = useState(null)
+  const [householdMembers, setHouseholdMembers] = useState([])
   const [isEditing, setIsEditing] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
@@ -49,9 +54,11 @@ export default function Residents() {
     civil_status: 'Single',
     gender: 'Male',
     household_no: '',
+    house_leader: '', 
     resident_since: '',
     life_status: 'Alive',
-    is_pwd: 'No'
+    is_pwd: 'No',
+    role_type: 'Member' 
   })
 
   useEffect(() => {
@@ -73,7 +80,7 @@ export default function Residents() {
     setLoading(false)
   }
 
-  // --- HELPER FUNCTION: Awtomatikong kalkulahin ang Edad sa English ---
+  // --- HELPER FUNCTION: Calculate Age ---
   const calculateAge = (birthdate) => {
     if (!birthdate) return 'N/A'
     const birthDateObj = new Date(birthdate)
@@ -86,7 +93,7 @@ export default function Residents() {
     return age >= 0 ? `${age} years old` : 'N/A'
   }
 
-  // --- HELPER FUNCTION: Kalkulahin ang tagal ng paninirahan sa English ---
+  // --- HELPER FUNCTION: Calculate Years as Resident ---
   const calculateYearsAsResident = (residentSinceDate, birthdate, isSinceBirth) => {
     const targetDate = isSinceBirth === 'Yes' || residentSinceDate === 'Since Birth' ? birthdate : residentSinceDate
     if (!targetDate) return 'N/A'
@@ -137,12 +144,28 @@ export default function Residents() {
       civil_status: resident.civil_status || 'Single',
       gender: resident.gender || 'Male',
       household_no: resident.household_no || '',
+      house_leader: resident.house_leader || '',
       resident_since: resident.resident_since || '',
       life_status: resident.life_status || 'Alive',
-      is_pwd: resident.is_pwd || 'No'
+      is_pwd: resident.is_pwd || 'No',
+      role_type: resident.role_type || 'Member'
     })
     setIsEditing(false)
     setCurrentView('view_profile')
+  }
+
+  // View Household Members
+  const handleViewHouseholdMembers = (resident) => {
+    setSelectedResident(resident)
+    if (!resident.household_no) {
+      setHouseholdMembers([])
+    } else {
+      const members = residentsList.filter(
+        r => r.household_no === resident.household_no && r.id !== resident.id
+      )
+      setHouseholdMembers(members)
+    }
+    setCurrentView('household_members')
   }
 
   // Open Add New Resident View
@@ -161,9 +184,11 @@ export default function Residents() {
       civil_status: 'Single',
       gender: 'Male',
       household_no: '',
+      house_leader: '',
       resident_since: 'Since Birth',
       life_status: 'Alive',
-      is_pwd: 'No'
+      is_pwd: 'No',
+      role_type: 'Member'
     })
     setCurrentView('add_resident')
   }
@@ -227,14 +252,47 @@ export default function Residents() {
     setSubmitting(false)
   }
 
+  // --- DELETE RESIDENT ACTION ---
+  const handleDeleteResident = async () => {
+    if (!selectedResident) return
+
+    const confirmDelete = window.confirm(`Are you sure you want to delete ${selectedResident.full_name || 'this resident'}? This action cannot be undone.`)
+    if (!confirmDelete) return
+
+    setSubmitting(true)
+    const { error } = await supabase
+      .from('residents')
+      .delete()
+      .eq('id', selectedResident.id)
+
+    if (error) {
+      alert('Error deleting resident: ' + error.message)
+      setSubmitting(false)
+    } else {
+      alert('Resident record successfully deleted.')
+      fetchResidents()
+      setCurrentView('list')
+      setSubmitting(false)
+    }
+  }
+
   // Filter residents
   const filteredResidents = residentsList.filter(res => {
     const query = searchTerm.toLowerCase()
     const fullName = (res.full_name || `${res.first_name} ${res.last_name}`).toLowerCase()
     const purok = (res.purok || '').toLowerCase()
     const email = (res.email || '').toLowerCase()
-    return fullName.includes(query) || purok.includes(query) || email.includes(query)
+    
+    const matchesSearch = fullName.includes(query) || purok.includes(query) || email.includes(query)
+    
+    if (filterLeaderOnly) {
+      return matchesSearch && res.role_type === 'House Leader'
+    }
+    return matchesSearch
   })
+
+  // House Leaders List for dropdown selection
+  const houseLeadersList = residentsList.filter(r => r.role_type === 'House Leader')
 
   return (
     <div className="admin-dashboard-wrapper">
@@ -261,20 +319,49 @@ export default function Residents() {
 
           <div className="admin-panel-card">
             <div className="panel-top-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Users size={18} color="#2563eb" />
-                <h3 className="panel-heading-title" style={{ margin: 0 }}>Resident Directory ({filteredResidents.length})</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Users size={18} color="#2563eb" />
+                  <h3 className="panel-heading-title" style={{ margin: 0 }}>Resident Directory ({filteredResidents.length})</h3>
+                </div>
+
+                {/* HOUSE LEADER FILTER BUTTON */}
+                <button
+                  onClick={() => setFilterLeaderOnly(!filterLeaderOnly)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    border: filterLeaderOnly ? '1px solid #16a34a' : '1px solid #cbd5e1',
+                    backgroundColor: filterLeaderOnly ? '#f0fdf4' : '#ffffff',
+                    color: filterLeaderOnly ? '#16a34a' : '#334155'
+                  }}
+                >
+                  <ShieldCheck size={14} />
+                  {filterLeaderOnly ? 'Showing House Leaders Only' : 'Filter House Leaders'}
+                </button>
               </div>
 
-              <div style={{ position: 'relative', width: '280px' }}>
-                <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+              {/* STYLISH MODERN SEARCH BAR */}
+              <div className="modern-search-wrapper">
+                <Search size={16} className="search-bar-icon" />
                 <input 
                   type="text" 
                   placeholder="Search by name, purok, email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="search-input-field"
+                  className="modern-search-input"
                 />
+                {searchTerm && (
+                  <button onClick={() => setSearchTerm('')} className="search-clear-btn">
+                    <X size={14} />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -289,10 +376,10 @@ export default function Residents() {
                 <thead>
                   <tr>
                     <th>Resident Name</th>
+                    <th>Role / Status</th>
                     <th>Email / Contact</th>
                     <th>Purok & Address</th>
                     <th>Status / PWD</th>
-                    <th>Date Registered</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -302,6 +389,19 @@ export default function Residents() {
                       <td>
                         <strong>{res.full_name || `${res.first_name || ''} ${res.last_name || ''}`.trim() || 'No Name'}</strong>
                         <div style={{ fontSize: '10px', color: '#64748b' }}>Household: {res.household_no || 'N/A'}</div>
+                      </td>
+                      <td>
+                        <span style={{
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          backgroundColor: res.role_type === 'House Leader' ? '#f0fdf4' : '#f1f5f9',
+                          color: res.role_type === 'House Leader' ? '#16a34a' : '#475569',
+                          border: res.role_type === 'House Leader' ? '1px solid #bbf7d0' : '1px solid #cbd5e1'
+                        }}>
+                          {res.role_type || 'Member'}
+                        </span>
                       </td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>{res.email || 'N/A'}</div>
@@ -324,7 +424,6 @@ export default function Residents() {
                         </div>
                         <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>Age: {calculateAge(res.birth_date)}</div>
                       </td>
-                      <td>{res.created_at ? new Date(res.created_at).toLocaleDateString() : 'N/A'}</td>
                       <td>
                         <button onClick={() => handleOpenViewProfile(res)} className="btn-view-profile">
                           <Eye size={13} /> View Profile
@@ -348,11 +447,23 @@ export default function Residents() {
             <button onClick={() => setCurrentView('list')} className="btn-back">
               <ArrowLeft size={16} /> Back to Residents Directory
             </button>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button 
+                onClick={() => handleViewHouseholdMembers(selectedResident)} 
+                style={{ backgroundColor: '#2563eb', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Layers size={14} /> View House Members ({selectedResident.household_no ? residentsList.filter(r => r.household_no === selectedResident.household_no).length : 1})
+              </button>
+
               {!isEditing ? (
-                <button onClick={() => setIsEditing(true)} className="btn-edit-mode">
-                  <Edit3 size={15} /> Edit Profile
-                </button>
+                <>
+                  <button onClick={() => setIsEditing(true)} className="btn-edit-mode">
+                    <Edit3 size={15} /> Edit Profile
+                  </button>
+                  <button onClick={handleDeleteResident} className="btn-delete-mode">
+                    <Trash2 size={15} /> Delete Resident
+                  </button>
+                </>
               ) : (
                 <button onClick={() => setIsEditing(false)} className="btn-cancel-mode">
                   <X size={15} /> Cancel Edit
@@ -375,6 +486,17 @@ export default function Residents() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '6px' }}>
+                <span style={{
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  backgroundColor: formData.role_type === 'House Leader' ? '#f0fdf4' : '#f1f5f9',
+                  color: formData.role_type === 'House Leader' ? '#16a34a' : '#475569',
+                  border: formData.role_type === 'House Leader' ? '1px solid #bbf7d0' : '1px solid #cbd5e1'
+                }}>
+                  {formData.role_type || 'Member'}
+                </span>
                 <span className={`status-pill ${formData.life_status === 'Deceased' ? 'deceased' : 'alive'}`}>
                   {formData.life_status}
                 </span>
@@ -389,6 +511,7 @@ export default function Residents() {
               <div className="profile-full-grid">
                 <div className="profile-card-section">
                   <h4 className="section-title"><User size={14} /> Personal Information</h4>
+                  <div className="info-row"><span className="info-label">Role / Status:</span> <span className="info-value" style={{ fontWeight: '700', color: selectedResident.role_type === 'House Leader' ? '#16a34a' : '#0f172a' }}>{selectedResident.role_type || 'Member'}</span></div>
                   <div className="info-row"><span className="info-label">First Name:</span> <span className="info-value">{selectedResident.first_name || 'N/A'}</span></div>
                   <div className="info-row"><span className="info-label">Middle Name:</span> <span className="info-value">{selectedResident.middle_name || 'N/A'}</span></div>
                   <div className="info-row"><span className="info-label">Last Name:</span> <span className="info-value">{selectedResident.last_name || 'N/A'}</span></div>
@@ -400,13 +523,13 @@ export default function Residents() {
                 </div>
 
                 <div className="profile-card-section">
-                  <h4 className="section-title"><Home size={14} /> Address & Contact</h4>
+                  <h4 className="section-title"><Home size={14} /> Address & Household</h4>
+                  <div className="info-row"><span className="info-label">Household No.:</span> <span className="info-value">{selectedResident.household_no || 'N/A'}</span></div>
+                  <div className="info-row"><span className="info-label">House Leader:</span> <span className="info-value" style={{ fontWeight: '700', color: '#2563eb' }}>{selectedResident.house_leader || 'N/A'}</span></div>
                   <div className="info-row"><span className="info-label">Email Address:</span> <span className="info-value">{selectedResident.email || 'N/A'}</span></div>
                   <div className="info-row"><span className="info-label">Contact Number:</span> <span className="info-value">{selectedResident.contact_no || 'N/A'}</span></div>
                   <div className="info-row"><span className="info-label">Purok:</span> <span className="info-value">{selectedResident.purok || 'Purok 1'}</span></div>
-                  <div className="info-row"><span className="info-label">Household No.:</span> <span className="info-value">{selectedResident.household_no || 'N/A'}</span></div>
                   <div className="info-row"><span className="info-label">Street Address:</span> <span className="info-value">{selectedResident.street_address || 'N/A'}</span></div>
-                  <div className="info-row"><span className="info-label">Full Address:</span> <span className="info-value">{selectedResident.address || `${selectedResident.street_address || ''}, ${selectedResident.purok || ''}, San Nicolas, Castillejos, Zambales`}</span></div>
                 </div>
 
                 <div className="profile-card-section full-span">
@@ -433,10 +556,17 @@ export default function Residents() {
                 </div>
               </div>
             ) : (
-              /* --- EDIT MODE FORM --- */
+              /* --- COMPACT EDIT MODE FORM --- */
               <form onSubmit={handleUpdateResident} className="edit-profile-form">
                 <h3 className="form-section-heading">Edit Personal Information</h3>
-                <div className="form-grid-3">
+                <div className="form-grid-4">
+                  <div>
+                    <label className="form-label">Role / Designation</label>
+                    <select name="role_type" value={formData.role_type} onChange={handleChange} className="form-input">
+                      <option value="Member">Member</option>
+                      <option value="House Leader">House Leader</option>
+                    </select>
+                  </div>
                   <div>
                     <label className="form-label">First Name</label>
                     <input type="text" name="first_name" required value={formData.first_name} onChange={handleChange} className="form-input" />
@@ -451,7 +581,7 @@ export default function Residents() {
                   </div>
                 </div>
 
-                <div className="form-grid-3">
+                <div className="form-grid-4">
                   <div>
                     <label className="form-label">Suffix</label>
                     <input type="text" name="suffix" placeholder="Jr., III" value={formData.suffix} onChange={handleChange} className="form-input" />
@@ -467,18 +597,6 @@ export default function Residents() {
                       <option value="Female">Female</option>
                     </select>
                   </div>
-                </div>
-
-                <h3 className="form-section-heading" style={{ marginTop: '20px' }}>Contact & Location Details</h3>
-                <div className="form-grid-3">
-                  <div>
-                    <label className="form-label">Email Address</label>
-                    <input type="email" name="email" required value={formData.email} onChange={handleChange} className="form-input" />
-                  </div>
-                  <div>
-                    <label className="form-label">Contact Number</label>
-                    <input type="text" name="contact_no" value={formData.contact_no} onChange={handleChange} className="form-input" />
-                  </div>
                   <div>
                     <label className="form-label">Civil Status</label>
                     <select name="civil_status" value={formData.civil_status} onChange={handleChange} className="form-input">
@@ -490,7 +608,16 @@ export default function Residents() {
                   </div>
                 </div>
 
-                <div className="form-grid-3">
+                <h3 className="form-section-heading">Contact & Location Details</h3>
+                <div className="form-grid-4">
+                  <div>
+                    <label className="form-label">Email Address</label>
+                    <input type="email" name="email" required value={formData.email} onChange={handleChange} className="form-input" />
+                  </div>
+                  <div>
+                    <label className="form-label">Contact Number</label>
+                    <input type="text" name="contact_no" value={formData.contact_no} onChange={handleChange} className="form-input" />
+                  </div>
                   <div>
                     <label className="form-label">Purok</label>
                     <select name="purok" value={formData.purok} onChange={handleChange} className="form-input">
@@ -507,17 +634,32 @@ export default function Residents() {
                     <label className="form-label">Household No.</label>
                     <input type="text" name="household_no" value={formData.household_no} onChange={handleChange} className="form-input" />
                   </div>
+                </div>
+
+                <div className="form-grid-4">
                   <div>
+                    <label className="form-label">House Leader</label>
+                    <select name="house_leader" value={formData.house_leader} onChange={handleChange} className="form-input">
+                      <option value="">-- Select House Leader --</option>
+                      {houseLeadersList.map(leader => {
+                        const leaderName = leader.full_name || `${leader.first_name} ${leader.last_name}`
+                        return (
+                          <option key={leader.id} value={leaderName}>{leaderName}</option>
+                        )
+                      })}
+                    </select>
+                  </div>
+                  <div style={{ gridColumn: 'span 3' }}>
                     <label className="form-label">Street Address</label>
                     <input type="text" name="street_address" value={formData.street_address} onChange={handleChange} className="form-input" />
                   </div>
                 </div>
 
-                <h3 className="form-section-heading" style={{ marginTop: '20px' }}>Barangay Residency & Status Fields</h3>
-                <div className="form-grid-3">
+                <h3 className="form-section-heading">Barangay Residency & Status Fields</h3>
+                <div className="form-grid-4">
                   <div>
                     <label className="form-label">Resident Since</label>
-                    <select name="resident_since_option" value={sinceType} onChange={handleChange} className="form-input" style={{ marginBottom: '6px' }}>
+                    <select name="resident_since_option" value={sinceType} onChange={handleChange} className="form-input" style={{ marginBottom: '4px' }}>
                       <option value="since_birth">Since Birth</option>
                       <option value="custom_date">Custom Date</option>
                     </select>
@@ -536,12 +678,12 @@ export default function Residents() {
                     <label className="form-label">PWD Status</label>
                     <select name="is_pwd" value={formData.is_pwd} onChange={handleChange} className="form-input">
                       <option value="No">No</option>
-                      <option value="Yes">Yes (Person with Disability)</option>
+                      <option value="Yes">Yes (PWD)</option>
                     </select>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px' }}>
                   <button type="button" onClick={() => setIsEditing(false)} className="btn-cancel-mode">
                     Cancel
                   </button>
@@ -556,7 +698,77 @@ export default function Residents() {
       )}
 
       {/* ========================================== */}
-      {/* VIEW 3: ADD NEW RESIDENT FULL VIEW FORM */}
+      {/* VIEW 3: HOUSEHOLD MEMBERS LIST VIEW */}
+      {/* ========================================== */}
+      {currentView === 'household_members' && selectedResident && (
+        <div className="full-view-container">
+          <div className="dashboard-top-flex">
+            <button onClick={() => setCurrentView('view_profile')} className="btn-back">
+              <ArrowLeft size={16} /> Back to Resident Profile
+            </button>
+            <h2 style={{ margin: 0, fontSize: '18px', color: '#0f172a' }}>
+              Household Members (Household No: {selectedResident.household_no || 'N/A'})
+            </h2>
+          </div>
+
+          <div className="admin-panel-card" style={{ marginTop: '16px' }}>
+            <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+              <strong>House Leader / Head: </strong> 
+              <span style={{ color: '#2563eb', fontWeight: '700' }}>{selectedResident.house_leader || 'No assigned House Leader'}</span>
+            </div>
+
+            <div className="panel-divider-line"></div>
+
+            {householdMembers.length === 0 ? (
+              <div className="table-state-box">No other members found in this household number.</div>
+            ) : (
+              <table className="pro-admin-table">
+                <thead>
+                  <tr>
+                    <th>Resident Name</th>
+                    <th>Role (Designation)</th>
+                    <th>Age & Gender</th>
+                    <th>Contact Number</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {householdMembers.map((member) => (
+                    <tr key={member.id}>
+                      <td>
+                        <strong>{member.full_name || `${member.first_name} ${member.last_name}`}</strong>
+                      </td>
+                      <td>
+                        <span style={{
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          backgroundColor: member.role_type === 'House Leader' ? '#f0fdf4' : '#f1f5f9',
+                          color: member.role_type === 'House Leader' ? '#16a34a' : '#475569',
+                          border: member.role_type === 'House Leader' ? '1px solid #bbf7d0' : '1px solid #cbd5e1'
+                        }}>
+                          {member.role_type || 'Member'}
+                        </span>
+                      </td>
+                      <td>{calculateAge(member.birth_date)} / {member.gender || 'N/A'}</td>
+                      <td>{member.contact_no || 'N/A'}</td>
+                      <td>
+                        <button onClick={() => handleOpenViewProfile(member)} className="btn-view-profile">
+                          <Eye size={13} /> View Profile
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================== */}
+      {/* VIEW 4: ADD NEW RESIDENT FULL VIEW FORM */}
       {/* ========================================== */}
       {currentView === 'add_resident' && (
         <div className="full-view-container">
@@ -570,7 +782,14 @@ export default function Residents() {
           <div className="admin-panel-card" style={{ marginTop: '16px' }}>
             <form onSubmit={handleAddResident} className="edit-profile-form">
               <h3 className="form-section-heading">Personal Information</h3>
-              <div className="form-grid-3">
+              <div className="form-grid-4">
+                <div>
+                  <label className="form-label">Role / Designation</label>
+                  <select name="role_type" value={formData.role_type} onChange={handleChange} className="form-input">
+                    <option value="Member">Member</option>
+                    <option value="House Leader">House Leader</option>
+                  </select>
+                </div>
                 <div>
                   <label className="form-label">First Name</label>
                   <input type="text" name="first_name" required value={formData.first_name} onChange={handleChange} className="form-input" />
@@ -585,7 +804,7 @@ export default function Residents() {
                 </div>
               </div>
 
-              <div className="form-grid-3">
+              <div className="form-grid-4">
                 <div>
                   <label className="form-label">Suffix</label>
                   <input type="text" name="suffix" placeholder="Jr., III" value={formData.suffix} onChange={handleChange} className="form-input" />
@@ -601,18 +820,6 @@ export default function Residents() {
                     <option value="Female">Female</option>
                   </select>
                 </div>
-              </div>
-
-              <h3 className="form-section-heading" style={{ marginTop: '20px' }}>Contact & Address</h3>
-              <div className="form-grid-3">
-                <div>
-                  <label className="form-label">Email Address</label>
-                  <input type="email" name="email" required value={formData.email} onChange={handleChange} className="form-input" />
-                </div>
-                <div>
-                  <label className="form-label">Contact Number</label>
-                  <input type="text" name="contact_no" placeholder="09XXXXXXXXX" value={formData.contact_no} onChange={handleChange} className="form-input" />
-                </div>
                 <div>
                   <label className="form-label">Civil Status</label>
                   <select name="civil_status" value={formData.civil_status} onChange={handleChange} className="form-input">
@@ -624,7 +831,16 @@ export default function Residents() {
                 </div>
               </div>
 
-              <div className="form-grid-3">
+              <h3 className="form-section-heading">Contact & Address</h3>
+              <div className="form-grid-4">
+                <div>
+                  <label className="form-label">Email Address</label>
+                  <input type="email" name="email" required value={formData.email} onChange={handleChange} className="form-input" />
+                </div>
+                <div>
+                  <label className="form-label">Contact Number</label>
+                  <input type="text" name="contact_no" placeholder="09XXXXXXXXX" value={formData.contact_no} onChange={handleChange} className="form-input" />
+                </div>
                 <div>
                   <label className="form-label">Purok</label>
                   <select name="purok" value={formData.purok} onChange={handleChange} className="form-input">
@@ -639,19 +855,34 @@ export default function Residents() {
                 </div>
                 <div>
                   <label className="form-label">Household No.</label>
-                  <input type="text" name="household_no" value={formData.household_no} onChange={handleChange} className="form-input" />
+                  <input type="text" name="household_no" placeholder="Ex. HH-001" value={formData.household_no} onChange={handleChange} className="form-input" />
                 </div>
+              </div>
+
+              <div className="form-grid-4">
                 <div>
+                  <label className="form-label">House Leader</label>
+                  <select name="house_leader" value={formData.house_leader} onChange={handleChange} className="form-input">
+                    <option value="">-- Select House Leader --</option>
+                    {houseLeadersList.map(leader => {
+                      const leaderName = leader.full_name || `${leader.first_name} ${leader.last_name}`
+                      return (
+                        <option key={leader.id} value={leaderName}>{leaderName}</option>
+                      )
+                    })}
+                  </select>
+                </div>
+                <div style={{ gridColumn: 'span 3' }}>
                   <label className="form-label">Street Address</label>
                   <input type="text" name="street_address" placeholder="House No. / Street Name" value={formData.street_address} onChange={handleChange} className="form-input" />
                 </div>
               </div>
 
-              <h3 className="form-section-heading" style={{ marginTop: '20px' }}>Residency & Special Status</h3>
-              <div className="form-grid-3">
+              <h3 className="form-section-heading">Residency & Special Status</h3>
+              <div className="form-grid-4">
                 <div>
                   <label className="form-label">Resident Since</label>
-                  <select name="resident_since_option" value={sinceType} onChange={handleChange} className="form-input" style={{ marginBottom: '6px' }}>
+                  <select name="resident_since_option" value={sinceType} onChange={handleChange} className="form-input" style={{ marginBottom: '4px' }}>
                     <option value="since_birth">Since Birth</option>
                     <option value="custom_date">Custom Date</option>
                   </select>
@@ -670,12 +901,12 @@ export default function Residents() {
                   <label className="form-label">PWD Status</label>
                   <select name="is_pwd" value={formData.is_pwd} onChange={handleChange} className="form-input">
                     <option value="No">No</option>
-                    <option value="Yes">Yes (Person with Disability)</option>
+                    <option value="Yes">Yes (PWD)</option>
                   </select>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px' }}>
                 <button type="button" onClick={() => setCurrentView('list')} className="btn-cancel-mode">
                   Cancel
                 </button>

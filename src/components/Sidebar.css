@@ -1,26 +1,43 @@
 .sidebar-container {
   width: 260px;
-  background-color: #0f172a; /* Dark Navy Background */
+  background-color: #0f172a; /* Slate 900 Dark Navy */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: 24px 16px;
   box-sizing: border-box;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  border-right: 1px solid #1e293b;
 }
 
 /* Header Section */
 .sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding-bottom: 20px;
   border-bottom: 1px solid #1e293b;
   margin-bottom: 20px;
-  padding-left: 8px;
+  padding-left: 4px;
+}
+
+.sidebar-brand-badge {
+  width: 36px;
+  height: 36px;
+  background-color: #2563eb;
+  color: #ffffff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.5px;
 }
 
 .sidebar-title {
   color: #ffffff;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.5px;
   margin: 0;
@@ -28,27 +45,36 @@
 }
 
 .sidebar-subtitle {
-  font-size: 12px;
+  font-size: 11px;
   color: #94a3b8;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 /* Navigation Links */
+.sidebar-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.8px;
+  margin-bottom: 8px;
+  padding-left: 12px;
+}
+
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  color: #cbd5e1; /* Mas maliwanag na kulay para malinaw basahin */
-  font-size: 14px;
-  font-weight: 500;
+  padding: 11px 14px;
+  border-radius: 8px;
+  color: #94a3b8; /* Balanced neutral slate for inactive items */
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   border: none;
@@ -59,23 +85,26 @@
 
 .nav-item:hover {
   background-color: #1e293b;
-  color: #ffffff;
-  transform: translateX(3px);
+  color: #f8fafc;
 }
 
 /* Active State Button */
 .nav-item.active {
-  background-color: #2563eb; /* Vibrant Blue */
+  background-color: #2563eb; /* Pro Blue */
   color: #ffffff;
   font-weight: 700;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
 .nav-icon {
-  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0.85;
+}
+
+.nav-item.active .nav-icon {
+  opacity: 1;
 }
 
 /* Bottom Footer Card */
@@ -83,18 +112,39 @@
   margin-top: 20px;
 }
 
-.slogan-card {
-  background-color: #1e293b;
-  padding: 14px;
-  border-radius: 12px;
-  text-align: center;
-  border: 1px solid #334155;
+.system-status-box {
+  background-color: #111827;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #1f2937;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  background-color: #22c55e;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+.status-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: #22c55e;
+  letter-spacing: 0.3px;
 }
 
 .slogan-text {
   font-size: 11px;
-  color: #94a3b8;
+  color: #6b7280;
   font-style: italic;
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.3;
 }
