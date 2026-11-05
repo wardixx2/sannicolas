@@ -1,4 +1,5 @@
 import React from 'react'
+import { FileText, Users, ShieldAlert, Wallet, ArrowRight } from 'lucide-react'
 import './LandingPage.css'
 
 export default function LandingPage({ onNavigateLogin, onNavigatePublicRequest }) {
@@ -33,7 +34,7 @@ export default function LandingPage({ onNavigateLogin, onNavigatePublicRequest }
           </p>
           <div className="hero-buttons">
             <button onClick={onNavigatePublicRequest} className="btn-hero-main">
-              Request Document Online →
+              Request Document Online <ArrowRight size={16} />
             </button>
           </div>
         </div>
@@ -44,25 +45,33 @@ export default function LandingPage({ onNavigateLogin, onNavigatePublicRequest }
         <h3 className="section-title">Core Services</h3>
         <div className="services-grid">
           <div className="service-card">
-            <div className="service-icon">📄</div>
+            <div className="service-icon-box">
+              <FileText size={20} className="service-icon" />
+            </div>
             <h4>Online Document Requests</h4>
             <p>Apply for Clearances & Certificates online.</p>
           </div>
 
           <div className="service-card">
-            <div className="service-icon">👥</div>
+            <div className="service-icon-box">
+              <Users size={20} className="service-icon" />
+            </div>
             <h4>Resident Profiles</h4>
             <p>Centralized secure demographic database.</p>
           </div>
 
           <div className="service-card">
-            <div className="service-icon">📁</div>
+            <div className="service-icon-box">
+              <ShieldAlert size={20} className="service-icon" />
+            </div>
             <h4>Blotter & Incidents</h4>
             <p>Track complaints and community cases.</p>
           </div>
 
           <div className="service-card">
-            <div className="service-icon">📊</div>
+            <div className="service-icon-box">
+              <Wallet size={20} className="service-icon" />
+            </div>
             <h4>Financial Transparency</h4>
             <p>Monitor municipal funds & project budgets.</p>
           </div>
