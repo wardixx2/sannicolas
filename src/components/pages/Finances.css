@@ -57,3 +57,22 @@
   color: #dc2626;
   border: 1px solid #fecaca;
 }
+
+/* Badges for Approval Status */
+.status-pill.status-approved {
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.status-pill.status-pending {
+  background-color: #fefce8;
+  color: #ca8a04;
+  border: 1px solid #fef08a;
+}
+
+.status-pill.status-not-approved {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}

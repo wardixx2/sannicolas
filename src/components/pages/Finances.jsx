@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabaseClient'
-import { Search, Plus, X, DollarSign, ArrowUpRight, ArrowDownRight, Wallet } from 'lucide-react'
+import { Search, Plus, X, Wallet, Check, Ban } from 'lucide-react'
 import './Finances.css'
 
 export default function Finances() {
@@ -22,7 +22,10 @@ export default function Finances() {
     type: 'Expense',
     amount: '',
     transaction_date: new Date().toISOString().split('T')[0],
-    description: ''
+    description: '',
+    proposed_by: '',
+    status: 'Pending',
+    approved_by: ''
   })
 
   useEffect(() => {
@@ -41,7 +44,6 @@ export default function Finances() {
     } else if (data) {
       setTransactions(data)
 
-      // Compute Total Income, Expenses & Net Balance
       let income = 0
       let expense = 0
 
@@ -88,8 +90,33 @@ export default function Finances() {
         type: 'Expense',
         amount: '',
         transaction_date: new Date().toISOString().split('T')[0],
-        description: ''
+        description: '',
+        proposed_by: '',
+        status: 'Pending',
+        approved_by: ''
       })
+      fetchFinances()
+    }
+    setLoading(false)
+  }
+
+  // Function para mag-update ng Status (Approve / Not Approve)
+  const handleUpdateStatus = async (id, newStatus) => {
+    const approverName = prompt(`Ilagay ang pangalan ng nag-${newStatus === 'Approved' ? 'apruba' : 'tumanggi'} (e.g., Punong Barangay):`)
+    if (!approverName) return // Kung kinansela o walang inilagay, itigil ang proseso
+
+    setLoading(true)
+    const { error } = await supabase
+      .from('finances')
+      .update({ 
+        status: newStatus,
+        approved_by: approverName 
+      })
+      .eq('id', id)
+
+    if (error) {
+      alert('Error updating status: ' + error.message)
+    } else {
       fetchFinances()
     }
     setLoading(false)
@@ -98,7 +125,10 @@ export default function Finances() {
   const filteredTransactions = transactions.filter(t =>
     t.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     t.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.type?.toLowerCase().includes(searchTerm.toLowerCase())
+    t.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    t.proposed_by?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    t.status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    t.approved_by?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   return (
@@ -133,7 +163,7 @@ export default function Finances() {
       </div>
 
       <div className="admin-panel-card">
-        {/* Action Bar with Modern Search Bar */}
+        {/* Action Bar */}
         <div className="panel-top-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Wallet size={18} color="#2563eb" />
@@ -144,7 +174,7 @@ export default function Finances() {
             <Search size={16} className="search-bar-icon" />
             <input
               type="text"
-              placeholder="Search by title, category, or type..."
+              placeholder="Search title, category, proposer, status..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="modern-search-input"
@@ -165,39 +195,105 @@ export default function Finances() {
             <thead>
               <tr>
                 <th>Title / Particulars</th>
+                <th>Proposed By</th>
                 <th>Category</th>
                 <th>Type</th>
                 <th>Amount</th>
+                <th>Status / Approved By</th>
                 <th>Date</th>
-                <th>Description / Remarks</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="table-state-box">Loading financial logs...</td>
+                  <td colSpan="8" className="table-state-box">Loading financial logs...</td>
                 </tr>
               ) : filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="table-state-box">No financial transactions recorded.</td>
+                  <td colSpan="8" className="table-state-box">No financial transactions recorded.</td>
                 </tr>
               ) : (
-                filteredTransactions.map((item) => (
-                  <tr key={item.id}>
-                    <td><strong>{item.title}</strong></td>
-                    <td>{item.category}</td>
-                    <td>
-                      <span className={`status-pill ${item.type === 'Income' ? 'type-income' : 'type-expense'}`}>
-                        {item.type}
-                      </span>
-                    </td>
-                    <td style={{ fontWeight: 'bold', color: item.type === 'Income' ? '#059669' : '#dc2626' }}>
-                      {item.type === 'Income' ? '+' : '-'}₱{parseFloat(item.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td>{item.transaction_date}</td>
-                    <td>{item.description || 'N/A'}</td>
-                  </tr>
-                ))
+                filteredTransactions.map((item) => {
+                  const currentStatus = item.status || 'Pending'
+                  const isProcessed = currentStatus === 'Approved' || currentStatus === 'Not Approved'
+
+                  return (
+                    <tr key={item.id}>
+                      <td><strong>{item.title}</strong></td>
+                      <td>{item.proposed_by || 'N/A'}</td>
+                      <td>{item.category}</td>
+                      <td>
+                        <span className={`status-pill ${item.type === 'Income' ? 'type-income' : 'type-expense'}`}>
+                          {item.type}
+                        </span>
+                      </td>
+                      <td style={{ fontWeight: 'bold', color: item.type === 'Income' ? '#059669' : '#dc2626' }}>
+                        {item.type === 'Income' ? '+' : '-'}₱{parseFloat(item.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <span className={`status-pill status-${currentStatus.toLowerCase().replace(' ', '-')}`}>
+                            {currentStatus}
+                          </span>
+                          <span style={{ fontSize: '11px', color: '#64748b' }}>
+                            {item.approved_by ? `By: ${item.approved_by}` : 'No approver yet'}
+                          </span>
+                        </div>
+                      </td>
+                      <td>{item.transaction_date}</td>
+                      <td>
+                        {/* Kung na-proseso na (Approved / Not Approved), huwag nang ipakita ang buttons */}
+                        {isProcessed ? (
+                          <span style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic', fontWeight: '500' }}>
+                            Already Processed
+                          </span>
+                        ) : (
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button
+                              onClick={() => handleUpdateStatus(item.id, 'Approved')}
+                              title="Approve"
+                              style={{
+                                background: '#f0fdf4',
+                                color: '#16a34a',
+                                border: '1px solid #bbf7d0',
+                                padding: '6px 10px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                fontSize: '12px',
+                                fontWeight: '600'
+                              }}
+                            >
+                              <Check size={14} /> Approve
+                            </button>
+                            <button
+                              onClick={() => handleUpdateStatus(item.id, 'Not Approved')}
+                              title="Not Approve"
+                              style={{
+                                background: '#fef2f2',
+                                color: '#dc2626',
+                                border: '1px solid #fecaca',
+                                padding: '6px 10px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                fontSize: '12px',
+                                fontWeight: '600'
+                              }}
+                            >
+                              <Ban size={14} /> Reject
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })
               )}
             </tbody>
           </table>
@@ -224,6 +320,19 @@ export default function Finances() {
                   value={formData.title}
                   onChange={handleChange}
                   placeholder="e.g., Q1 IRA Allocation or Solar Streetlight Repair"
+                  required
+                  className="form-input"
+                />
+              </div>
+
+              <div className="input-group">
+                <label className="form-label">Proposed By</label>
+                <input
+                  type="text"
+                  name="proposed_by"
+                  value={formData.proposed_by}
+                  onChange={handleChange}
+                  placeholder="e.g., Kagawad Juan Dela Cruz / SK Chairman"
                   required
                   className="form-input"
                 />
